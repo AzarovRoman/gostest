@@ -1,0 +1,77 @@
+from ftplib import FTP
+import ftplib
+import os
+import glob
+import zipfile
+
+def ftpWork():#скачаивание с фтп
+            #выбор региона и нужного говна
+    region = input('введите регион(алтайский/амурский/архангельск): ')
+
+    if region == 'алтайский':
+        region = 'Altajskij_kraj/'
+    elif region == 'амурский':
+        region = 'Amurskaja_obl/'
+    elif region == 'архангельск':
+        region = 'Arkhangelskaja_obl/'
+    else:
+        print('нет такого региона :(')
+
+    contents = input('введите чё вам надо(закупки/протоколы/контракты): ')
+
+    if contents == 'закупки':
+        contents = 'notifications/'
+    elif contents == 'протоколы':
+        contents = 'protocols/'
+    elif contents == 'контракты':
+        contents = 'contracts/'
+    else:
+        print('введено не верно')
+
+    way = '/fcs_regions/' + region + contents  #полный путь до нужной директории в фтп
+
+    ftp = FTP('ftp.zakupki.gov.ru')
+    ftp.login(user='free', passwd="free")
+
+
+    ftp.cwd(way)
+    filenames = ftp.nlst()
+    #print(filenames)
+
+    os.mkdir('zipki')  #папка под архивы
+    
+    for filename in filenames:
+        host_file = os.path.join('D:\zakazaka\zipki', filename)
+        print('скачиваю: ' + filename)
+        try:
+            with open(host_file, 'wb') as local_file:
+                ftp.retrbinary('RETR ' + filename, local_file.write)
+        except ftplib.error_perm:
+            pass
+
+def unzip():    #распаковка всякого говна
+    for i in range(1, len(glob.glob('D:/zakazaka/zipki/*.zip')) + 1):
+        os.mkdir('zakaz' + str(i))
+
+        k = 1
+    for i in glob.glob('*/zakazaka/zipki/*.zip'):
+        os.mkdir(i)
+        zip_f = zipfile.ZipFile(i, 'r')
+
+        puti = 'D:/zakazaka/zakaz' + str(k)
+        zip_f.extractall(path=puti)
+        zip_f.close()
+        k += 1
+
+# def analysis():     #ААААААААААааааанализ закупок
+#     for k in glob.glob('*/zakazaka/zaka*'):
+#         for i in glob.glob(str(k) + '/*.xml'):
+#             doc = xml.dom.minidom.parse(i)
+#             xml = open(i, 'r', encoding='utf-8')
+#             a = xml.read()
+#             xml1 = re.findall(r'schemeVersion=(\w+.\w+)', a)
+
+
+
+ftpWork()
+unzip()
